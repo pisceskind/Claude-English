@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+  html, body {
+    margin:0;
+    padding:0;
+    height:100%;
+    background:#15161A;
+  }
+  body{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:16px;
+    box-sizing:border-box;
+  }
+  :root{
+    --ink:#15161A;
+    --panel:#1E2027;
+    --panel-raised:#262833;
+    --text:#EDEEF2;
+    --text-dim:#9A9DAA;
+    --accent:#7C83FD;
+    --accent-dim:#4A4E9E;
+    --gold:#FFB86B;
+    --good:#6FCF97;
+    --warn:#E4572E;
+    --border:#33353F;
+  }
+  *{box-sizing:border-box;}
+  .tutor-root{
+    font-family:'Inter',system-ui,-apple-system,sans-serif;
+    background:var(--ink);
+    color:var(--text);
+    border-radius:16px;
+    padding:0;
+    width:100%;
+    max-width:1100px;
+    height:100%;
+    max-height:800px;
+    display:flex;
+    flex-direction:column;
+    overflow:hidden;
+  }
+  .tutor-header{
+    padding:22px 26px 18px;
+    border-bottom:1px solid var(--border);
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+  }
+  .tutor-title{
+    font-family:'Fraunces',Georgia,serif;
+    font-size:22px;
+    font-weight:600;
+    letter-spacing:-0.01em;
+  }
+  .tutor-sub{
+    font-size:12px;
+    color:var(--text-dim);
+    text-transform:uppercase;
+    letter-spacing:0.08em;
+  }
+  .tutor-body{
+    flex:1;
+    display:flex;
+    min-height:0;
+  }
+  .chat-col{
+    flex:1.4;
+    display:flex;
+    flex-direction:column;
+    padding:20px 24px;
+    min-width:0;
+    border-right:1px solid var(--border);
+  }
+  .feedback-col{
+    flex:1;
+    padding:20px 22px;
+    display:flex;
+    flex-direction:column;
+    min-height:0;
+  }
+  .feedback-log{
+    flex:1;
+    overflow-y:auto;
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+    padding-right:4px;
+  }
+  .fb-turn{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    padding-bottom:14px;
+    border-bottom:1px solid var(--border);
+  }
+  .fb-turn:last-child{
+    border-bottom:none;
+    padding-bottom:0;
+  }
+  .fb-turn-label{
+    font-size:10.5px;
+    text-transform:uppercase;
+    letter-spacing:0.09em;
+    color:var(--accent);
+    opacity:0.8;
+  }
+  .messages{
+    flex:1;
+    overflow-y:auto;
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+    padding-right:6px;
+    margin-bottom:16px;
+  }
+  .msg{
+    max-width:82%;
+    padding:12px 15px;
+    border-radius:14px;
+    font-size:14.5px;
+    line-height:1.5;
+  }
+  .msg.tutor{
+    background:var(--panel-raised);
+    align-self:flex-start;
+    border-bottom-left-radius:4px;
+  }
+  .msg.user{
+    background:var(--accent-dim);
+    align-self:flex-end;
+    border-bottom-right-radius:4px;
+    color:#fff;
+  }
+  .msg.system-note{
+    align-self:center;
+    color:var(--text-dim);
+    font-size:12px;
+    font-style:italic;
+  }
+  .control-row{
+    display:flex;
+    align-items:center;
+    gap:16px;
+    padding-top:8px;
+  }
+  .mic-btn{
+    width:64px;height:64px;
+    border-radius:50%;
+    border:none;
+    background:var(--panel-raised);
+    color:var(--accent);
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;
+    position:relative;
+    flex-shrink:0;
+    transition:background 0.2s, transform 0.15s;
+  }
+  .mic-btn:hover{transform:scale(1.04);}
+  .mic-btn.listening{
+    background:var(--accent);
+    color:#0B0C10;
+  }
+  .mic-btn:disabled{opacity:0.4;cursor:not-allowed;}
+  .wave{
+    display:flex;
+    align-items:center;
+    gap:3px;
+    height:28px;
+  }
+  .wave-bar{
+    width:4px;
+    background:var(--gold);
+    border-radius:2px;
+    height:6px;
+    transition:height 0.12s ease;
+  }
+  .status-text{
+    font-size:13px;
+    color:var(--text-dim);
+    flex:1;
+  }
+  .mute-btn{
+    width:36px;height:36px;
+    border-radius:50%;
+    border:1px solid var(--border);
+    background:var(--panel);
+    color:var(--text-dim);
+    cursor:pointer;
+    flex-shrink:0;
+    display:flex;align-items:center;justify-content:center;
+    font-size:15px;
+  }
+  .mute-btn::before{content:"🔊";}
+  .mute-btn.is-muted{
+    color:var(--warn);
+    border-color:rgba(228,87,46,0.4);
+  }
+  .mute-btn.is-muted::before{content:"🔇";}
+  .replay-btn{
+    width:36px;height:36px;
+    border-radius:50%;
+    border:1px solid var(--border);
+    background:var(--panel);
+    color:var(--text-dim);
+    cursor:pointer;
+    flex-shrink:0;
+    display:flex;align-items:center;justify-content:center;
+    font-size:17px;
+    line-height:1;
+  }
+  .replay-btn:hover{
+    color:var(--accent);
+    border-color:var(--accent);
+  }
+  .replay-btn:disabled{opacity:0.4;cursor:not-allowed;}
+  .text-row{
+    display:flex;
+    gap:10px;
+    margin-top:14px;
+  }
+  .text-input{
+    flex:1;
+    background:var(--panel);
+    border:1px solid var(--border);
+    color:var(--text);
+    border-radius:10px;
+    padding:11px 14px;
+    font-size:14px;
+    font-family:inherit;
+    outline:none;
+  }
+  .text-input:focus{
+    border-color:var(--accent);
+  }
+  .send-btn{
+    background:var(--panel-raised);
+    color:var(--text);
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:11px 18px;
+    font-size:13.5px;
+    font-weight:600;
+    cursor:pointer;
+    flex-shrink:0;
+  }
+  .send-btn:hover{border-color:var(--accent);}
+  .apikey-box{
+    width:100%;
+    max-width:340px;
+    text-align:left;
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    margin-top:6px;
+  }
+  .apikey-label{
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:0.08em;
+    color:var(--text-dim);
+  }
+  .apikey-input{
+    background:var(--panel);
+    border:1px solid var(--border);
+    color:var(--text);
+    border-radius:10px;
+    padding:11px 14px;
+    font-size:14px;
+    font-family:inherit;
+    outline:none;
+  }
+  .apikey-input:focus{border-color:var(--accent);}
+  .apikey-remember{
+    font-size:12.5px;
+    color:var(--text-dim);
+    display:flex;
+    align-items:center;
+    gap:6px;
+  }
+  .apikey-hint{
+    font-size:12px;
+    color:var(--text-dim);
+    line-height:1.5;
+    margin:0;
+  }
+  .apikey-link{color:var(--accent);}
+  .start-screen{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    gap:18px;
+    padding:40px 20px;
+  }
+  .start-screen h2{
+    font-family:'Fraunces',Georgia,serif;
+    font-size:28px;
+    font-weight:600;
+    max-width:340px;
+  }
+  .start-screen p{
+    color:var(--text-dim);
+    font-size:14px;
+    max-width:360px;
+    line-height:1.6;
+  }
+  .primary-btn{
+    background:var(--accent);
+    color:#0B0C10;
+    border:none;
+    padding:13px 28px;
+    border-radius:999px;
+    font-weight:600;
+    font-size:14.5px;
+    cursor:pointer;
+    transition:transform 0.15s;
+  }
+  .primary-btn:hover{transform:translateY(-1px);}
+  .fb-section{margin-bottom:22px;}
+  .fb-label{
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:0.09em;
+    color:var(--text-dim);
+    margin-bottom:6px;
+  }
+  .fb-card{
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:12px 14px;
+    margin-bottom:8px;
+    font-size:13.5px;
+    line-height:1.5;
+  }
+  .fb-said{color:var(--warn);text-decoration:line-through;opacity:0.85;}
+  .fb-better{color:var(--good);font-weight:600;}
+  .fb-why{color:var(--text-dim);font-size:12.5px;margin-top:4px;}
+  .fb-empty{color:var(--text-dim);font-size:13px;font-style:italic;}
+  .native-tip{
+    background:linear-gradient(135deg, rgba(255,184,107,0.12), rgba(124,131,253,0.08));
+    border:1px solid rgba(255,184,107,0.3);
+    border-radius:10px;
+    padding:12px 14px;
+    font-size:13.5px;
+    line-height:1.5;
+  }
+  .error-box{
+    background:rgba(228,87,46,0.12);
+    border:1px solid rgba(228,87,46,0.4);
+    color:#F5A487;
+    padding:10px 14px;
+    border-radius:8px;
+    font-size:12.5px;
+    margin-top:10px;
+  }
+  ::-webkit-scrollbar{width:6px;}
+  ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+</style>
+</head>
+<body>
+<div class="tutor-root" id="root">
+  <div class="tutor-header">
+    <div>
+      <div class="tutor-title">Practică conversație — Engleză</div>
+      <div class="tutor-sub">Nivel A2 · Conversație generală</div>
+    </div>
+  </div>
+  <div class="tutor-body" id="body">
+    <div class="start-screen" id="startScreen">
+      <h2>Hai să vorbim în engleză</h2>
+      <p>Apasă start, apoi vorbește când microfonul se aprinde. Vei primi un răspuns vorbit și feedback pe gramatică, vocabular, fluență și cum ar spune un vorbitor nativ.</p>
+      <div class="apikey-box">
+        <label for="apiKeyInput" class="apikey-label">Adresa proxy-ului tău (Cloudflare Worker URL)</label>
+        <input type="text" id="apiKeyInput" class="apikey-input" placeholder="https://numele-tau.subdomeniu.workers.dev" autocomplete="off" />
+        <label class="apikey-remember"><input type="checkbox" id="rememberKey" /> Ține minte adresa pe acest dispozitiv</label>
+        <p class="apikey-hint">Adresa proxy-ului tău Cloudflare Worker (vezi ghidul de configurare). Cheia OpenAI stă ascunsă acolo, nu mai e nevoie s-o introduci aici.</p>
+      </div>
+      <button class="primary-btn" id="startBtn">Start conversație</button>
+      <div id="compatWarning" style="display:none" class="error-box"></div>
+      <div id="apiKeyError" style="display:none" class="error-box"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const root = document.getElementById('root');
+  const bodyEl = document.getElementById('body');
+  const startScreen = document.getElementById('startScreen');
+  const startBtn = document.getElementById('startBtn');
+  const compatWarning = document.getElementById('compatWarning');
+
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const hasSpeechRecognition = !!SpeechRecognition;
+  const hasSpeechSynthesis = !!window.speechSynthesis;
+
+  if (!hasSpeechRecognition) {
+    compatWarning.style.display = 'block';
+    compatWarning.textContent = 'Recunoașterea vocală nu este disponibilă în acest browser, dar poți folosi modul scris mai jos.';
+  }
+
+  let conversation = []; // {role: 'user'|'assistant', content: string}
+  let recognition = null;
+  let listening = false;
+  let synthVoice = null;
+  let isMuted = false;
+  let apiKey = '';
+  let lastReplyText = '';
+  try {
+    const saved = window.localStorage ? window.localStorage.getItem('loora_clone_openai_key') : null;
+    if (saved) {
+      apiKey = saved;
+      const el = document.getElementById('apiKeyInput');
+      if (el) el.value = saved;
+      const chk = document.getElementById('rememberKey');
+      if (chk) chk.checked = true;
+    }
+  } catch (e) { /* localStorage unavailable, ignore */ }
+
+  function pickVoice(){
+    const voices = window.speechSynthesis.getVoices();
+    synthVoice = voices.find(v => v.lang === 'en-US') || voices.find(v => v.lang.startsWith('en')) || voices[0];
+  }
+  if (hasSpeechSynthesis) {
+    window.speechSynthesis.onvoiceschanged = pickVoice;
+    pickVoice();
+  }
+
+  function speak(text){
+    if (!hasSpeechSynthesis || isMuted) return;
+    window.speechSynthesis.cancel();
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.lang = 'en-US';
+    utter.rate = 0.92;
+    if (synthVoice) utter.voice = synthVoice;
+    window.speechSynthesis.speak(utter);
+  }
+
+  function buildInterface(){
+    bodyEl.innerHTML = `
+      <div class="chat-col">
+        <div class="messages" id="messages"></div>
+        <div class="control-row">
+          <button class="mic-btn" id="micBtn" title="Vorbește">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
+          </button>
+          <div class="wave" id="wave">
+            ${Array.from({length:5}).map(()=>'<div class="wave-bar"></div>').join('')}
+          </div>
+          <div class="status-text" id="statusText">Apasă microfonul și vorbește</div>
+          <button class="mute-btn" id="muteBtn" title="Oprește vocea AI"></button>
+          <button class="replay-btn" id="replayBtn" title="Ascultă din nou ultimul răspuns">↻</button>
+        </div>
+        <div class="text-row">
+          <input type="text" id="textInput" class="text-input" placeholder="...sau scrie aici în engleză" autocomplete="off" />
+          <button class="send-btn" id="sendBtn">Trimite</button>
+        </div>
+        <div id="errorArea"></div>
+      </div>
+      <div class="feedback-col" id="feedbackCol">
+        <div class="feedback-log" id="feedbackLog">
+          <div class="fb-empty" id="feedbackEmptyState">Vorbește sau scrie ceva și vei primi corectări, vocabular și sugestii aici, pe măsură ce conversația avansează.</div>
+        </div>
+      </div>
+    `;
+    document.getElementById('micBtn').addEventListener('click', toggleListening);
+    if (!hasSpeechRecognition) {
+      document.getElementById('micBtn').disabled = true;
+      document.getElementById('micBtn').title = 'Indisponibil în acest browser — folosește caseta de scris';
+    }
+    document.getElementById('muteBtn').addEventListener('click', toggleMute);
+    document.getElementById('replayBtn').addEventListener('click', () => {
+      if (lastReplyText) speak(lastReplyText);
+    });
+    if (!hasSpeechSynthesis) {
+      document.getElementById('muteBtn').disabled = true;
+      document.getElementById('muteBtn').title = 'Vocea AI nu e disponibilă în acest browser';
+      document.getElementById('replayBtn').disabled = true;
+    }
+    if (isMuted) document.getElementById('muteBtn').classList.add('is-muted');
+    document.getElementById('sendBtn').addEventListener('click', submitTextInput);
+    document.getElementById('textInput').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') submitTextInput();
+    });
+    setupRecognition();
+  }
+
+  function submitTextInput(){
+    const input = document.getElementById('textInput');
+    const text = input.value.trim();
+    if (!text) return;
+    input.value = '';
+    handleUserUtterance(text);
+  }
+
+  function toggleMute(){
+    isMuted = !isMuted;
+    document.getElementById('muteBtn').classList.toggle('is-muted', isMuted);
+    if (isMuted && hasSpeechSynthesis) window.speechSynthesis.cancel();
+  }
+
+  function addMessage(role, text){
+    const messages = document.getElementById('messages');
+    const div = document.createElement('div');
+    div.className = 'msg ' + (role === 'user' ? 'user' : 'tutor');
+    div.textContent = text;
+    messages.appendChild(div);
+    messages.scrollTop = messages.scrollHeight;
+  }
+
+  function addSystemNote(text){
+    const messages = document.getElementById('messages');
+    const div = document.createElement('div');
+    div.className = 'msg system-note';
+    div.textContent = text;
+    messages.appendChild(div);
+    messages.scrollTop = messages.scrollHeight;
+  }
+
+  function setStatus(text){
+    document.getElementById('statusText').textContent = text;
+  }
+
+  function showError(msg){
+    const area = document.getElementById('errorArea');
+    if (!area) return;
+    area.innerHTML = '<div class="error-box">' + msg + '</div>';
+  }
+
+  function clearError(){
+    const area = document.getElementById('errorArea');
+    if (area) area.innerHTML = '';
+  }
+
+  function animateWave(active){
+    const bars = document.querySelectorAll('.wave-bar');
+    if (window._waveInterval) clearInterval(window._waveInterval);
+    if (!active) {
+      bars.forEach(b => b.style.height = '6px');
+      return;
+    }
+    window._waveInterval = setInterval(() => {
+      bars.forEach(b => {
+        b.style.height = (6 + Math.random() * 22) + 'px';
+      });
+    }, 130);
+  }
+
+  function setupRecognition(){
+    if (!hasSpeechRecognition) return;
+    recognition = new SpeechRecognition();
+    recognition.lang = 'en-US';
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    recognition.onstart = () => {
+      listening = true;
+      document.getElementById('micBtn').classList.add('listening');
+      animateWave(true);
+      setStatus('Te ascult...');
+      clearError();
+    };
+
+    recognition.onresult = (event) => {
+      const transcript = event.results[0][0].transcript;
+      handleUserUtterance(transcript);
+    };
+
+    recognition.onerror = (event) => {
+      let msg = 'A apărut o eroare cu microfonul.';
+      if (event.error === 'not-allowed' || event.error === 'permission-denied') {
+        msg = 'Accesul la microfon a fost refuzat. Permite accesul din setările browserului.';
+      } else if (event.error === 'no-speech') {
+        msg = 'Nu am detectat nicio voce. Încearcă din nou.';
+      }
+      showError(msg);
+      setStatus('Apasă microfonul și vorbește');
+    };
+
+    recognition.onend = () => {
+      listening = false;
+      document.getElementById('micBtn').classList.remove('listening');
+      animateWave(false);
+    };
+  }
+
+  function toggleListening(){
+    if (!recognition) return;
+    if (listening) {
+      recognition.stop();
+    } else {
+      if (hasSpeechSynthesis) window.speechSynthesis.cancel();
+      try {
+        recognition.start();
+      } catch (e) {
+        // already started, ignore
+      }
+    }
+  }
+
+  async function handleUserUtterance(text){
+    addMessage('user', text);
+    conversation.push({role:'user', content:text});
+    setStatus('Se procesează...');
+    await callTutor();
+  }
+
+  let turnCount = 0;
+
+  function renderFeedback(fb){
+    const log = document.getElementById('feedbackLog');
+    const emptyState = document.getElementById('feedbackEmptyState');
+    if (emptyState) emptyState.remove();
+
+    turnCount += 1;
+    const turn = document.createElement('div');
+    turn.className = 'fb-turn';
+
+    let html = `<div class="fb-turn-label">Runda ${turnCount}</div>`;
+
+    html += `<div><div class="fb-label">Corectări</div>`;
+    if (fb.corrections && fb.corrections.length > 0) {
+      fb.corrections.forEach(c => {
+        html += `<div class="fb-card"><div class="fb-said">${escapeHtml(c.said)}</div><div class="fb-better">${escapeHtml(c.better)}</div><div class="fb-why">${escapeHtml(c.why || '')}</div></div>`;
+      });
+    } else {
+      html += `<div class="fb-empty">Foarte bine — nicio corectare de data asta!</div>`;
+    }
+    html += `</div>`;
+
+    if (fb.vocabulary_tip) {
+      html += `<div><div class="fb-label">Vocabular</div><div class="fb-card">${escapeHtml(fb.vocabulary_tip)}</div></div>`;
+    }
+    if (fb.fluency_note) {
+      html += `<div><div class="fb-label">Fluență</div><div class="fb-card">${escapeHtml(fb.fluency_note)}</div></div>`;
+    }
+    if (fb.native_tip) {
+      html += `<div><div class="fb-label">Ca un vorbitor nativ</div><div class="native-tip">${escapeHtml(fb.native_tip)}</div></div>`;
+    }
+
+    turn.innerHTML = html;
+    log.appendChild(turn);
+    log.scrollTop = log.scrollHeight;
+  }
+
+  function escapeHtml(str){
+    const div = document.createElement('div');
+    div.textContent = str || '';
+    return div.innerHTML;
+  }
+
+  function buildSystemPrompt(){
+    return `You are Loora-style English conversation tutor for a Romanian speaker at CEFR level A2, practicing general everyday conversation.
+Rules:
+- Keep your spoken reply ("reply") simple, short (1-3 sentences), using vocabulary and grammar appropriate for A2 level.
+- Always end your reply with a friendly follow-up question to keep the conversation going, unless the user is ending the chat.
+- Be warm, encouraging, non-judgmental. Never make the user feel bad about mistakes.
+- Review the user's LAST message for grammar or word-choice mistakes. If there are mistakes, list them in "corrections" as an array of objects: {"said": "<exact wrong phrase from user>", "better": "<corrected version>", "why": "<one short simple explanation, in simple English>"}. Include at most 3 corrections, only real mistakes, not stylistic nitpicks.
+- If no mistakes, return an empty corrections array.
+- "vocabulary_tip": one short suggestion of a useful word or phrase related to the topic they just discussed (or empty string if nothing relevant).
+- "fluency_note": one short, encouraging observation about their fluency/sentence flow in this message (or empty string).
+- "native_tip": if relevant, show how a native English speaker would naturally phrase something the user said or could have said, as a short example (or empty string if not applicable).
+
+Respond ONLY with valid JSON, no markdown fences, no preamble, in exactly this shape:
+{"reply": "...", "corrections": [{"said":"...","better":"...","why":"..."}], "vocabulary_tip": "...", "fluency_note": "...", "native_tip": "..."}`;
+  }
+
+  async function callTutor(){
+    try {
+      const messages = conversation.map(m => ({role: m.role, content: m.content}));
+      const response = await fetch(apiKey, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          model: "gpt-4o-mini",
+          max_tokens: 1000,
+          response_format: { type: "json_object" },
+          messages: [
+            { role: "system", content: buildSystemPrompt() },
+            ...(messages.length > 0 ? messages : [{role:"user", content:"Hello, let's start."}])
+          ]
+        })
+      });
+      const data = await response.json();
+      if (data.error) {
+        throw new Error(data.error.message || 'API error');
+      }
+      const cleaned = (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content || '').replace(/```json|```/g, '').trim();
+      let parsed;
+      try {
+        parsed = JSON.parse(cleaned);
+      } catch (e) {
+        throw new Error('Nu am putut interpreta răspunsul modelului.');
+      }
+      conversation.push({role:'assistant', content: parsed.reply});
+      addMessage('tutor', parsed.reply);
+      lastReplyText = parsed.reply;
+      speak(parsed.reply);
+      renderFeedback(parsed);
+      setStatus('Apasă microfonul și vorbește');
+      clearError();
+    } catch (err) {
+      showError('Eroare la conectarea cu tutorele AI (' + (err && err.message ? err.message : 'necunoscuta') + '). Incearca din nou.');
+      setStatus('Apasă microfonul și vorbește');
+    }
+  }
+
+  startBtn.addEventListener('click', async () => {
+    const keyInput = document.getElementById('apiKeyInput').value.trim();
+    const apiKeyError = document.getElementById('apiKeyError');
+    if (!keyInput) {
+      apiKeyError.style.display = 'block';
+      apiKeyError.textContent = 'Introdu adresa proxy-ului tău pentru a continua.';
+      return;
+    }
+    apiKeyError.style.display = 'none';
+    apiKey = /^https?:\/\//i.test(keyInput) ? keyInput : 'https://' + keyInput;
+    const remember = document.getElementById('rememberKey').checked;
+    try {
+      if (remember && window.localStorage) {
+        window.localStorage.setItem('loora_clone_openai_key', apiKey);
+      } else if (window.localStorage) {
+        window.localStorage.removeItem('loora_clone_openai_key');
+      }
+    } catch (e) { /* ignore storage errors */ }
+
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        stream.getTracks().forEach(t => t.stop());
+      } catch (e) {
+        // permission denied or unavailable — mic button will still try, and text mode always works
+      }
+    }
+
+    buildInterface();
+    addSystemNote('Conversația a început');
+    setStatus('Se pregătește prima întrebare...');
+    await callTutor();
+  });
+})();
+</script>
+</body>
+</html>
