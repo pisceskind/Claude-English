@@ -166,6 +166,23 @@
     color:#0B0C10;
   }
   .mic-btn:disabled{opacity:0.4;cursor:not-allowed;}
+  .lang-toggle-btn{
+    width:40px;height:32px;
+    border-radius:8px;
+    border:1px solid var(--border);
+    background:var(--panel);
+    color:var(--text-dim);
+    font-size:12px;
+    font-weight:700;
+    letter-spacing:0.03em;
+    cursor:pointer;
+    flex-shrink:0;
+  }
+  .lang-toggle-btn.is-ro{
+    color:var(--gold);
+    border-color:rgba(255,184,107,0.4);
+  }
+  .lang-toggle-btn:disabled{opacity:0.4;cursor:not-allowed;}
   .wave{
     display:flex;
     align-items:center;
@@ -414,6 +431,7 @@
   let isMuted = false;
   let apiKey = '';
   let lastReplyText = '';
+  let micLang = 'en-US';
   try {
     const saved = window.localStorage ? window.localStorage.getItem('loora_clone_openai_key') : null;
     if (saved) {
@@ -452,6 +470,7 @@
           <button class="mic-btn" id="micBtn" title="Vorbește">
             <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
           </button>
+          <button class="lang-toggle-btn" id="langToggleBtn" title="Schimbă limba microfonului">EN</button>
           <div class="wave" id="wave">
             ${Array.from({length:5}).map(()=>'<div class="wave-bar"></div>').join('')}
           </div>
@@ -475,8 +494,10 @@
     if (!hasSpeechRecognition) {
       document.getElementById('micBtn').disabled = true;
       document.getElementById('micBtn').title = 'Indisponibil în acest browser — folosește caseta de scris';
+      document.getElementById('langToggleBtn').disabled = true;
     }
     document.getElementById('muteBtn').addEventListener('click', toggleMute);
+    document.getElementById('langToggleBtn').addEventListener('click', toggleMicLang);
     document.getElementById('replayBtn').addEventListener('click', () => {
       if (lastReplyText) speak(lastReplyText);
     });
@@ -505,6 +526,15 @@
     isMuted = !isMuted;
     document.getElementById('muteBtn').classList.toggle('is-muted', isMuted);
     if (isMuted && hasSpeechSynthesis) window.speechSynthesis.cancel();
+  }
+
+  function toggleMicLang(){
+    micLang = micLang === 'en-US' ? 'ro-RO' : 'en-US';
+    const btn = document.getElementById('langToggleBtn');
+    btn.textContent = micLang === 'ro-RO' ? 'RO' : 'EN';
+    btn.classList.toggle('is-ro', micLang === 'ro-RO');
+    btn.title = micLang === 'ro-RO' ? 'Microfon setat pe română — apasă pentru engleză' : 'Microfon setat pe engleză — apasă pentru română';
+    if (recognition) recognition.lang = micLang;
   }
 
   function addMessage(role, text){
@@ -557,7 +587,7 @@
   function setupRecognition(){
     if (!hasSpeechRecognition) return;
     recognition = new SpeechRecognition();
-    recognition.lang = 'en-US';
+    recognition.lang = micLang;
     recognition.interimResults = false;
     recognition.maxAlternatives = 1;
 
